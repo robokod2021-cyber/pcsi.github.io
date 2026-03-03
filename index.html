@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инновационный курс Python — 30 занятий</title>
+    <!-- Pyodide для выполнения Python -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0f1e;
+            --bg-card: rgba(18, 25, 45, 0.7);
+            --neon-cyan: #00f7ff;
+            --neon-pink: #ff3e9d;
+            --neon-purple: #9d4edd;
+            --text-primary: #f0f5fa;
+            --text-secondary: #b0c0d0;
+            --border-glow: 0 0 10px rgba(0, 247, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 30%, #1e2a4a, #0b0f1a);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            width: 1400px;
+            max-width: 100%;
+            height: 900px;
+            max-height: 95vh;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 247, 255, 0.2) inset;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-panel {
+            flex: 2;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tab-controller {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+            background: rgba(0, 10, 20, 0.5);
+            padding: 10px;
+            border-radius: 100px;
+            border: 1px solid rgba(0, 247, 255, 0.3);
+            width: fit-content;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-button {
+            padding: 12px 36px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .tab-button.active {
+            background: rgba(0, 247, 255, 0.15);
+            color: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .content-stage {
+            flex: 1;
+            background: rgba(0, 5, 15, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 30px;
+            border: 1px solid rgba(0, 247, 255, 0.2);
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .content-stage::-webkit-scrollbar {
+            width: 8px;
+        }
+        .content-stage::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .content-stage::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 10px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .theory-content h2, .practice-content h2 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 30px;
+            color: var(--neon-cyan);
+            border-left: 4px solid var(--neon-pink);
+            padding-left: 20px;
+        }
+
+        .theory-content pre, .practice-content pre {
+            background: #010514;
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid var(--neon-purple);
+            color: #b3f0ff;
+            font-family: 'Fira Code', monospace;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .practice-content textarea {
+            width: 100%;
+            background: #020617;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 16px;
+            padding: 15px;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            margin-top: 10px;
+            resize: vertical;
+        }
+
+        .practice-content button {
+            background: transparent;
+            border: 2px solid var(--neon-pink);
+            color: var(--neon-pink);
+            padding: 10px 25px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 15px;
+            margin-right: 15px;
+        }
+        .practice-content button:hover {
+            background: var(--neon-pink);
+            color: black;
+        }
+
+        .lessons-panel {
+            flex: 1;
+            padding: 40px 20px;
+            background: rgba(0, 5, 15, 0.4);
+            backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            overflow-y: auto;
+        }
+
+        .lessons-panel h3 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--neon-pink);
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        .module-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--neon-purple);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 20px 0 15px;
+            padding-left: 20px;
+            border-left: 3px solid var(--neon-purple);
+        }
+
+        .lesson-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            background: rgba(10, 20, 35, 0.6);
+            border-radius: 50px;
+            border: 1px solid rgba(0, 247, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .lesson-item:hover {
+            border-color: var(--neon-cyan);
+            transform: translateX(10px);
+        }
+
+        .lesson-item.active {
+            border-color: var(--neon-pink);
+            background: rgba(40, 20, 40, 0.8);
+        }
+
+        .lesson-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(0,247,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            border: 1px solid var(--neon-cyan);
+        }
+
+        .task {
+            background: rgba(0, 20, 40, 0.5);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0,247,255,0.2);
+        }
+
+        .code-input {
+            width: 100%;
+            background: #0a1424;
+            border: 1px solid var(--neon-purple);
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            margin: 10px 0;
+        }
+
+        .input-data-container {
+            background: rgba(0, 20, 40, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid rgba(0, 247, 255, 0.2);
+        }
+        
+        .input-data-field {
+            width: 100%;
+            background: #0a1424;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 10px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            resize: vertical;
+        }
+
+        .console {
+            background: #0a0e1a;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 12px;
+            padding: 15px;
+            color: #aaffaa;
+            font-family: 'Fira Code', monospace;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .stats {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 30px;
+            text-align: center;
+            border: 1px dashed var(--neon-purple);
+        }
+
+        .stats span {
+            color: var(--neon-cyan);
+            font-weight: 700;
+            font-size: 2rem;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Левая панель с контентом -->
+        <div class="content-panel">
+            <div class="tab-controller">
+                <button class="tab-button active" id="tab-theory">📡 Теория</button>
+                <button class="tab-button" id="tab-practice">⚡ Практика</button>
+            </div>
+            <div class="content-stage">
+                <div class="tab-pane active" id="theory-pane">
+                    <div class="theory-content">
+                        <h2 id="theory-lesson-title">1. Введение, переменные, print/input</h2>
+                        <div id="theory-text"></div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="practice-pane">
+                    <div class="practice-content">
+                        <h2 id="practice-lesson-title">1. Введение, переменные, print/input</h2>
+                        <div id="practice-task"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая панель с уроками -->
+        <div class="lessons-panel">
+            <h3>✦ Космос знаний ✦</h3>
+            <div id="lessons-timeline">
+                <div class="module-group">
+                    <div class="module-header">Модуль 1 · Turtle</div>
+                    <div class="lesson-item active" data-lesson-id="1"><span class="lesson-icon">🐍</span><span class="lesson-title">1. Введение</span></div>
+                    <div class="lesson-item" data-lesson-id="2"><span class="lesson-icon">🔀</span><span class="lesson-title">2. Ветвления if/else</span></div>
+                    <div class="lesson-item" data-lesson-id="3"><span class="lesson-icon">🔄</span><span class="lesson-title">3. Циклы</span></div>
+                    <div class="lesson-item" data-lesson-id="4"><span class="lesson-icon">🐢</span><span class="lesson-title">4. Turtle</span></div>
+                    <div class="lesson-item" data-lesson-id="5"><span class="lesson-icon">🌀</span><span class="lesson-title">5. Узоры</span></div>
+                    <div class="lesson-item" data-lesson-id="6"><span class="lesson-icon">🏁</span><span class="lesson-title">6. Проект: гонки</span></div>
+                </div>
+                <div class="module-group">
+                    <div class="module-header">Модуль 2 · Структуры данных</div>
+                    <div class="lesson-item" data-lesson-id="7"><span class="lesson-icon">📊</span><span class="lesson-title">7. Строки и списки</span></div>
+                    <div class="lesson-item" data-lesson-id="8"><span class="lesson-icon">⚙️</span><span class="lesson-title">8. Функции</span></div>
+                    <div class="lesson-item" data-lesson-id="9"><span class="lesson-icon">📚</span><span class="lesson-title">9. Словари</span></div>
+                    <div class="lesson-item" data-lesson-id="10"><span class="lesson-icon">📁</span><span class="lesson-title">10. Файлы</span></div>
+                </div>
+            </div>
+            <div class="stats">
+                <span>30</span> уроков
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Данные уроков
+        const lessonsData = {
+            1: {
+                theory: `
+                    <h3>🐍 Урок 1: Введение</h3>
+                    <p>Переменные и функции print/input:</p>
+                    <pre><code>name = input()
+print("Привет, " + name)</code></pre>
+                `,
+                practice: `
+                    <div class="task" data-input="Алиса" data-output="Привет, Алиса!">
+                        <p><strong>Задача: Приветствие</strong></p>
+                        <textarea class="code-input" rows="3">name = input()
+print("Привет, " + name + "!")</textarea>
+                        <div class="input-data-container">
+                            <label>📥 Входные данные:</label>
+                            <textarea class="input-data-field" rows="1">Алиса</textarea>
+                        </div>
+                        <button class="check-btn">Проверить</button>
+                        <button class="show-answer-btn">Показать ответ</button>
+                        <button class="insert-answer-btn">Вставить ответ</button>
+                        <pre class="answer" style="display:none;">name = input()
+print("Привет, " + name + "!")</pre>
+                    </div>
+                `
+            },
+            7: {
+                theory: `
+                    <h3>📊 Урок 7: Строки и списки</h3>
+                    <p>Работа со строками и метод split():</p>
+                    <pre><code>words = input().split()
+print(len(words))</code></pre>
+                `,
+                practice: `
+                    <div class="task" data-input="один два три" data-output="3">
+                        <p><strong>Задача: Количество слов</strong></p>
+                        <textarea class="code-input" rows="3">s = input()
+words = s.split()
+print(len(words))</textarea>
+                        <div class="input-data-container">
+                            <label>📥 Входные данные:</label>
+                            <textarea class="input-data-field" rows="1">один два три</textarea>
+                        </div>
+                        <button class="check-btn">Проверить</button>
+                        <button class="show-answer-btn">Показать ответ</button>
+                        <button class="insert-answer-btn">Вставить ответ</button>
+                        <pre class="answer" style="display:none;">s = input()
+words = s.split()
+print(len(words))</pre>
+                    </div>
+                `
+            }
+        };
+
+        let pyodide = null;
+
+        // Загрузка Pyodide
+        async function initPyodide() {
+            if (!pyodide) {
+                pyodide = await loadPyodide({
+                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
+                });
+                console.log('✅ Pyodide загружен');
+            }
+            return pyodide;
+        }
+
+        // Запускаем загрузку сразу
+        initPyodide();
+
+        // Элементы интерфейса
+        const tabTheory = document.getElementById('tab-theory');
+        const tabPractice = document.getElementById('tab-practice');
+        const paneTheory = document.getElementById('theory-pane');
+        const panePractice = document.getElementById('practice-pane');
+        const theoryTitle = document.getElementById('theory-lesson-title');
+        const practiceTitle = document.getElementById('practice-lesson-title');
+        const theoryText = document.getElementById('theory-text');
+        const practiceTask = document.getElementById('practice-task');
+        const lessonItems = document.querySelectorAll('.lesson-item');
+
+        // Переключение вкладок
+        function switchTab(active) {
+            tabTheory.classList.remove('active');
+            tabPractice.classList.remove('active');
+            paneTheory.classList.remove('active');
+            panePractice.classList.remove('active');
+            if (active === 'theory') {
+                tabTheory.classList.add('active');
+                paneTheory.classList.add('active');
+            } else {
+                tabPractice.classList.add('active');
+                panePractice.classList.add('active');
+            }
+        }
+
+        tabTheory.addEventListener('click', () => switchTab('theory'));
+        tabPractice.addEventListener('click', () => switchTab('practice'));
+
+        // Функция выполнения Python кода
+        async function executePython(code, inputData) {
+            const py = await initPyodide();
+            
+            // Подготавливаем входные данные
+            const inputLines = inputData ? inputData.split('\n').filter(line => line !== '') : [];
+            
+            // Код для выполнения
+            const pythonCode = `
+import sys
+from io import StringIO
+
+# Перехватываем вывод
+old_stdout = sys.stdout
+sys.stdout = StringIO()
+
+# Входные данные
+input_data = ${JSON.stringify(inputLines)}
+input_index = 0
+
+# Своя функция input
+def input(prompt=""):
+    global input_index
+    if input_index < len(input_data):
+        value = input_data[input_index]
+        input_index += 1
+        return value
+    return ""
+
+# Выполняем код
+try:
+${code.split('\n').map(line => '    ' + line).join('\n')}
+except Exception as e:
+    print("Ошибка:", str(e))
+
+# Получаем результат
+result = sys.stdout.getvalue()
+sys.stdout = old_stdout
+result
+`;
+            
+            return await py.runPythonAsync(pythonCode);
+        }
+
+        // Функция для обновления кнопок
+        function attachPracticeEvents() {
+            document.querySelectorAll('#practice-task .check-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    const taskDiv = this.closest('.task');
+                    const codeInput = taskDiv.querySelector('.code-input');
+                    const inputField = taskDiv.querySelector('.input-data-field');
+                    const code = codeInput.value;
+                    const inputData = inputField ? inputField.value : '';
+                    const expectedOutput = taskDiv.dataset.output || '';
+                    
+                    // Консоль
+                    let consoleDiv = taskDiv.querySelector('.console');
+                    if (!consoleDiv) {
+                        consoleDiv = document.createElement('div');
+                        consoleDiv.className = 'console';
+                        taskDiv.appendChild(consoleDiv);
+                    }
+                    
+                    // Прячем/показываем консоль
+                    if (this.textContent === 'Скрыть консоль') {
+                        consoleDiv.style.display = 'none';
+                        this.textContent = 'Проверить';
+                        return;
+                    }
+                    
+                    consoleDiv.style.display = 'block';
+                    consoleDiv.innerHTML = '⏳ Выполнение...';
+                    this.textContent = 'Скрыть консоль';
+                    
+                    try {
+                        // Выполняем код
+                        const result = await executePython(code, inputData);
+                        
+                        // Форматируем вывод
+                        let output = '\n';
+                        output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+                        
+                        if (inputData) {
+                            output += '📥 ВХОДНЫЕ ДАННЫЕ:\n';
+                            output += inputData + '\n\n';
+                        }
+                        
+                        output += '📤 ВЫВОД ПРОГРАММЫ:\n';
+                        const cleanResult = result ? result.toString().trim() : '(пустой вывод)';
+                        output += cleanResult + '\n';
+                        
+                        if (expectedOutput) {
+                            output += '\n📋 ОЖИДАЕМЫЙ ВЫВОД:\n';
+                            output += expectedOutput + '\n\n';
+                            
+                            if (cleanResult === expectedOutput.trim()) {
+                                output += '✅ РЕЗУЛЬТАТ: Верно!\n';
+                            } else {
+                                output += '❌ РЕЗУЛЬТАТ: Неверно\n';
+                            }
+                        }
+                        
+                        output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+                        consoleDiv.innerHTML = output.replace(/\n/g, '<br>');
+                        
+                    } catch (error) {
+                        consoleDiv.innerHTML = '❌ ОШИБКА:\n' + error.toString();
+                    }
+                });
+            });
+
+            // Показать ответ
+            document.querySelectorAll('#practice-task .show-answer-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const taskDiv = this.closest('.task');
+                    const answerPre = taskDiv.querySelector('.answer');
+                    if (answerPre.style.display === 'none') {
+                        answerPre.style.display = 'block';
+                        this.textContent = 'Скрыть ответ';
+                    } else {
+                        answerPre.style.display = 'none';
+                        this.textContent = 'Показать ответ';
+                    }
+                });
+            });
+
+            // Вставить ответ
+            document.querySelectorAll('#practice-task .insert-answer-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const taskDiv = this.closest('.task');
+                    const answerPre = taskDiv.querySelector('.answer');
+                    const codeInput = taskDiv.querySelector('.code-input');
+                    if (answerPre && codeInput) {
+                        codeInput.value = answerPre.textContent.trim();
+                    }
+                });
+            });
+        }
+
+        // Активация урока
+        function setActiveLesson(selected) {
+            lessonItems.forEach(item => item.classList.remove('active'));
+            selected.classList.add('active');
+
+            const lessonId = selected.dataset.lessonId;
+            const lessonTitle = selected.querySelector('.lesson-title').textContent;
+            theoryTitle.textContent = lessonTitle;
+            practiceTitle.textContent = lessonTitle;
+
+            if (lessonsData[lessonId]) {
+                theoryText.innerHTML = lessonsData[lessonId].theory;
+                practiceTask.innerHTML = lessonsData[lessonId].practice;
+                attachPracticeEvents();
+            } else {
+                theoryText.innerHTML = '<p>Материал готовится...</p>';
+                practiceTask.innerHTML = '<p>Задания появятся позже.</p>';
+            }
+        }
+
+        // Обработчики кликов на уроки
+        lessonItems.forEach(item => {
+            item.addEventListener('click', function() {
+                setActiveLesson(this);
+            });
+        });
+
+        // Активируем первый урок
+        const firstActive = document.querySelector('.lesson-item.active');
+        if (firstActive) setActiveLesson(firstActive);
+    </script>
+</body>
+</html>
