@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Инновационный курс Python — 30 занятий</title>
-    <!-- Pyodide для выполнения Python -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
@@ -23,6 +21,7 @@
             --neon-purple: #9d4edd;
             --text-primary: #f0f5fa;
             --text-secondary: #b0c0d0;
+            --glow-intensity: 0 0 15px;
             --border-glow: 0 0 10px rgba(0, 247, 255, 0.3);
         }
 
@@ -39,6 +38,15 @@
             overflow-x: hidden;
         }
 
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.2)"/><circle cx="90" cy="30" r="1.5" fill="rgba(0,247,255,0.3)"/><circle cx="40" cy="80" r="1" fill="rgba(157,78,221,0.3)"/></svg>');
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
         .dashboard {
             width: 1400px;
             max-width: 100%;
@@ -48,7 +56,7 @@
             backdrop-filter: blur(20px) saturate(180%);
             border-radius: 48px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 247, 255, 0.2) inset;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 247, 255, 0.2) inset, 0 0 30px rgba(0, 247, 255, 0.3);
             display: flex;
             overflow: hidden;
             position: relative;
@@ -61,6 +69,7 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(255,255,255,0.1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.3) inset;
         }
 
         .tab-controller {
@@ -71,6 +80,7 @@
             padding: 10px;
             border-radius: 100px;
             border: 1px solid rgba(0, 247, 255, 0.3);
+            box-shadow: var(--border-glow);
             width: fit-content;
             backdrop-filter: blur(10px);
         }
@@ -86,15 +96,36 @@
             border-radius: 40px;
             cursor: pointer;
             transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
             text-transform: uppercase;
             border: 1px solid transparent;
+        }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,247,255,0.3) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            z-index: -1;
+        }
+
+        .tab-button:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .tab-button.active {
             background: rgba(0, 247, 255, 0.15);
             color: var(--neon-cyan);
             border-color: var(--neon-cyan);
-            box-shadow: 0 0 20px var(--neon-cyan);
+            box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 10px var(--neon-cyan);
         }
 
         .content-stage {
@@ -104,8 +135,10 @@
             border-radius: 32px;
             padding: 30px;
             border: 1px solid rgba(0, 247, 255, 0.2);
+            box-shadow: inset 0 0 30px rgba(0, 247, 255, 0.1), 0 20px 40px rgba(0,0,0,0.4);
             overflow-y: auto;
             scrollbar-width: thin;
+            scrollbar-color: var(--neon-cyan) rgba(255,255,255,0.1);
         }
 
         .content-stage::-webkit-scrollbar {
@@ -118,14 +151,21 @@
         .content-stage::-webkit-scrollbar-thumb {
             background: var(--neon-cyan);
             border-radius: 10px;
+            box-shadow: 0 0 10px var(--neon-cyan);
         }
 
         .tab-pane {
             display: none;
+            animation: fadeGlow 0.5s ease;
         }
 
         .tab-pane.active {
             display: block;
+        }
+
+        @keyframes fadeGlow {
+            0% { opacity: 0; filter: blur(5px); }
+            100% { opacity: 1; filter: blur(0); }
         }
 
         .theory-content h2, .practice-content h2 {
@@ -133,8 +173,15 @@
             font-weight: 300;
             margin-bottom: 30px;
             color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
             border-left: 4px solid var(--neon-pink);
             padding-left: 20px;
+        }
+
+        .theory-content p, .practice-content p {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
         }
 
         .theory-content pre, .practice-content pre {
@@ -142,6 +189,7 @@
             padding: 15px;
             border-radius: 16px;
             border: 1px solid var(--neon-purple);
+            box-shadow: 0 0 20px rgba(157,78,221,0.3);
             color: #b3f0ff;
             font-family: 'Fira Code', monospace;
             overflow-x: auto;
@@ -167,14 +215,17 @@
             padding: 10px 25px;
             border-radius: 40px;
             font-weight: bold;
+            letter-spacing: 1px;
             cursor: pointer;
             transition: 0.3s;
+            box-shadow: 0 0 15px var(--neon-pink);
             margin-top: 15px;
             margin-right: 15px;
         }
         .practice-content button:hover {
             background: var(--neon-pink);
             color: black;
+            box-shadow: 0 0 30px var(--neon-pink);
         }
 
         .lessons-panel {
@@ -185,15 +236,29 @@
             display: flex;
             flex-direction: column;
             border-left: 1px solid rgba(255,255,255,0.05);
+            position: relative;
             overflow-y: auto;
+            scrollbar-width: thin;
         }
 
         .lessons-panel h3 {
             font-size: 1.8rem;
             font-weight: 300;
             color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
             margin-bottom: 40px;
             letter-spacing: 2px;
+        }
+
+        .timeline {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .module-group {
+            margin-bottom: 30px;
         }
 
         .module-header {
@@ -202,9 +267,16 @@
             color: var(--neon-purple);
             text-transform: uppercase;
             letter-spacing: 3px;
-            margin: 20px 0 15px;
+            margin-bottom: 15px;
             padding-left: 20px;
             border-left: 3px solid var(--neon-purple);
+            box-shadow: -5px 0 10px rgba(157,78,221,0.3);
+        }
+
+        .lesson-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .lesson-item {
@@ -215,18 +287,38 @@
             background: rgba(10, 20, 35, 0.6);
             border-radius: 50px;
             border: 1px solid rgba(0, 247, 255, 0.1);
+            backdrop-filter: blur(5px);
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 8px;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lesson-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,247,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .lesson-item:hover::before {
+            left: 100%;
         }
 
         .lesson-item:hover {
             border-color: var(--neon-cyan);
-            transform: translateX(10px);
+            box-shadow: 0 0 20px rgba(0,247,255,0.3);
+            transform: translateX(10px) scale(1.02);
+            background: rgba(20, 40, 60, 0.8);
         }
 
         .lesson-item.active {
             border-color: var(--neon-pink);
+            box-shadow: 0 0 25px var(--neon-pink), inset 0 0 10px rgba(255,62,157,0.3);
             background: rgba(40, 20, 40, 0.8);
         }
 
@@ -239,17 +331,60 @@
             align-items: center;
             justify-content: center;
             font-size: 1.3rem;
-            border: 1px solid var(--neon-cyan);
+            border: 1px solid currentColor;
+            color: var(--neon-cyan);
+            box-shadow: 0 0 10px currentColor;
+            transition: 0.3s;
         }
 
+        .lesson-item.active .lesson-icon {
+            color: var(--neon-pink);
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        .lesson-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .lesson-item.active .lesson-title {
+            color: white;
+            text-shadow: 0 0 8px var(--neon-pink);
+        }
+
+        .stats {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 30px;
+            text-align: center;
+            border: 1px dashed var(--neon-purple);
+            font-size: 1rem;
+        }
+
+        .stats span {
+            color: var(--neon-cyan);
+            font-weight: 700;
+            font-size: 2rem;
+            display: block;
+            text-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        /* Стили для задач */
         .task {
             background: rgba(0, 20, 40, 0.5);
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 25px;
             border: 1px solid rgba(0,247,255,0.2);
+            box-shadow: 0 0 15px rgba(0,247,255,0.1);
         }
-
+        .task hr {
+            border: 1px dashed var(--neon-cyan);
+            margin: 20px 0;
+        }
         .code-input {
             width: 100%;
             background: #0a1424;
@@ -260,26 +395,49 @@
             font-family: 'Fira Code', monospace;
             margin: 10px 0;
         }
-
-        .input-data-container {
-            background: rgba(0, 20, 40, 0.3);
-            border-radius: 12px;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid rgba(0, 247, 255, 0.2);
-        }
-        
-        .input-data-field {
-            width: 100%;
-            background: #0a1424;
+        .check-btn, .show-answer-btn, .insert-answer-btn {
+            background: transparent;
             border: 1px solid var(--neon-cyan);
-            border-radius: 8px;
-            padding: 10px;
-            color: #fff;
-            font-family: 'Fira Code', monospace;
-            resize: vertical;
+            color: var(--neon-cyan);
+            padding: 8px 18px;
+            border-radius: 30px;
+            margin-right: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
         }
-
+        .check-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+        .show-answer-btn {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+        .show-answer-btn:hover {
+            background: var(--neon-pink);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+        .insert-answer-btn {
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
+        }
+        .insert-answer-btn:hover {
+            background: var(--neon-purple);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+        .answer {
+            background: #0c0c1c;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--neon-pink);
+            margin-top: 15px;
+            font-family: 'Fira Code', monospace;
+            white-space: pre-wrap;
+        }
         .console {
             background: #0a0e1a;
             border: 1px solid var(--neon-cyan);
@@ -290,42 +448,47 @@
             margin-top: 20px;
             white-space: pre-wrap;
             word-wrap: break-word;
-            max-height: 300px;
-            overflow-y: auto;
+            box-shadow: 0 0 15px rgba(0,255,255,0.2);
         }
 
-        .stats {
-            margin-top: 40px;
-            padding: 20px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 30px;
-            text-align: center;
-            border: 1px dashed var(--neon-purple);
-        }
-
-        .stats span {
-            color: var(--neon-cyan);
-            font-weight: 700;
-            font-size: 2rem;
-            display: block;
+        @media (max-width: 1000px) {
+            .dashboard {
+                flex-direction: column;
+                height: auto;
+                max-height: none;
+                border-radius: 30px;
+            }
+            .content-panel {
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .lessons-panel {
+                max-height: 400px;
+            }
         }
     </style>
+    <!-- Skulpt для выполнения Python в браузере -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://skulpt.org/js/skulpt.min.js" type="text/javascript"></script>
+    <script src="https://skulpt.org/js/skulpt-stdlib.js" type="text/javascript"></script>
 </head>
 <body>
     <div class="dashboard">
-        <!-- Левая панель с контентом -->
+        <!-- ЛЕВАЯ ПАНЕЛЬ: КОНТЕНТ -->
         <div class="content-panel">
             <div class="tab-controller">
                 <button class="tab-button active" id="tab-theory">📡 Теория</button>
                 <button class="tab-button" id="tab-practice">⚡ Практика</button>
             </div>
             <div class="content-stage">
+                <!-- Вкладка теории -->
                 <div class="tab-pane active" id="theory-pane">
                     <div class="theory-content">
                         <h2 id="theory-lesson-title">1. Введение, переменные, print/input</h2>
                         <div id="theory-text"></div>
                     </div>
                 </div>
+                <!-- Вкладка практики -->
                 <div class="tab-pane" id="practice-pane">
                     <div class="practice-content">
                         <h2 id="practice-lesson-title">1. Введение, переменные, print/input</h2>
@@ -335,302 +498,1301 @@
             </div>
         </div>
 
-        <!-- Правая панель с уроками -->
+        <!-- ПРАВАЯ ПАНЕЛЬ: МЕНЮ ЗАНЯТИЙ -->
         <div class="lessons-panel">
             <h3>✦ Космос знаний ✦</h3>
-            <div id="lessons-timeline">
+            <div class="timeline" id="lessons-timeline">
+                <!-- Модуль 1: Занятия 1-6 (Turtle) -->
                 <div class="module-group">
                     <div class="module-header">Модуль 1 · Turtle</div>
-                    <div class="lesson-item active" data-lesson-id="1"><span class="lesson-icon">🐍</span><span class="lesson-title">1. Введение</span></div>
-                    <div class="lesson-item" data-lesson-id="2"><span class="lesson-icon">🔀</span><span class="lesson-title">2. Ветвления if/else</span></div>
-                    <div class="lesson-item" data-lesson-id="3"><span class="lesson-icon">🔄</span><span class="lesson-title">3. Циклы</span></div>
-                    <div class="lesson-item" data-lesson-id="4"><span class="lesson-icon">🐢</span><span class="lesson-title">4. Turtle</span></div>
-                    <div class="lesson-item" data-lesson-id="5"><span class="lesson-icon">🌀</span><span class="lesson-title">5. Узоры</span></div>
-                    <div class="lesson-item" data-lesson-id="6"><span class="lesson-icon">🏁</span><span class="lesson-title">6. Проект: гонки</span></div>
+                    <div class="lesson-items">
+                        <div class="lesson-item active" data-lesson-id="1"><span class="lesson-icon">🐍</span><span class="lesson-title">1. Введение, переменные, print/input</span></div>
+                        <div class="lesson-item" data-lesson-id="2"><span class="lesson-icon">🔀</span><span class="lesson-title">2. Ветвления if/else</span></div>
+                        <div class="lesson-item" data-lesson-id="3"><span class="lesson-icon">🔄</span><span class="lesson-title">3. Циклы for/while</span></div>
+                        <div class="lesson-item" data-lesson-id="4"><span class="lesson-icon">🐢</span><span class="lesson-title">4. Turtle: рисуем</span></div>
+                        <div class="lesson-item" data-lesson-id="5"><span class="lesson-icon">🌀</span><span class="lesson-title">5. Узоры и фракталы</span></div>
+                        <div class="lesson-item" data-lesson-id="6"><span class="lesson-icon">🏁</span><span class="lesson-title">6. Проект: гонки</span></div>
+                    </div>
                 </div>
+                <!-- Модуль 2: Занятия 7-10 (Структуры) -->
                 <div class="module-group">
                     <div class="module-header">Модуль 2 · Структуры данных</div>
-                    <div class="lesson-item" data-lesson-id="7"><span class="lesson-icon">📊</span><span class="lesson-title">7. Строки и списки</span></div>
-                    <div class="lesson-item" data-lesson-id="8"><span class="lesson-icon">⚙️</span><span class="lesson-title">8. Функции</span></div>
-                    <div class="lesson-item" data-lesson-id="9"><span class="lesson-icon">📚</span><span class="lesson-title">9. Словари</span></div>
-                    <div class="lesson-item" data-lesson-id="10"><span class="lesson-icon">📁</span><span class="lesson-title">10. Файлы</span></div>
+                    <div class="lesson-items">
+                        <div class="lesson-item" data-lesson-id="7"><span class="lesson-icon">📊</span><span class="lesson-title">7. Строки и списки</span></div>
+                        <div class="lesson-item" data-lesson-id="8"><span class="lesson-icon">⚙️</span><span class="lesson-title">8. Функции</span></div>
+                        <div class="lesson-item" data-lesson-id="9"><span class="lesson-icon">📚</span><span class="lesson-title">9. Словари, кортежи</span></div>
+                        <div class="lesson-item" data-lesson-id="10"><span class="lesson-icon">📁</span><span class="lesson-title">10. Файлы</span></div>
+                    </div>
+                </div>
+                <!-- Модуль 3: Занятия 11-12 (Random) -->
+                <div class="module-group">
+                    <div class="module-header">Модуль 3 · Random и игры</div>
+                    <div class="lesson-items">
+                        <div class="lesson-item" data-lesson-id="11"><span class="lesson-icon">🎲</span><span class="lesson-title">11. Модуль random</span></div>
+                        <div class="lesson-item" data-lesson-id="12"><span class="lesson-icon">✂️</span><span class="lesson-title">12. Консольные игры</span></div>
+                    </div>
+                </div>
+                <!-- Модуль 4: Занятия 13-18 (Pygame) -->
+                <div class="module-group">
+                    <div class="module-header">Модуль 4 · Pygame</div>
+                    <div class="lesson-items">
+                        <div class="lesson-item" data-lesson-id="13"><span class="lesson-icon">🎮</span><span class="lesson-title">13. Основы Pygame</span></div>
+                        <div class="lesson-item" data-lesson-id="14"><span class="lesson-icon">🖼️</span><span class="lesson-title">14. Графика, спрайты</span></div>
+                        <div class="lesson-item" data-lesson-id="15"><span class="lesson-icon">💥</span><span class="lesson-title">15. Коллизии</span></div>
+                        <div class="lesson-item" data-lesson-id="16"><span class="lesson-icon">🔊</span><span class="lesson-title">16. Текст и звук</span></div>
+                        <div class="lesson-item" data-lesson-id="17"><span class="lesson-icon">🛠️</span><span class="lesson-title">17. Работа над проектом</span></div>
+                        <div class="lesson-item" data-lesson-id="18"><span class="lesson-icon">🏆</span><span class="lesson-title">18. Защита проектов</span></div>
+                    </div>
+                </div>
+                <!-- Модуль 5: Занятия 19-23 (Tkinter / Боты) -->
+                <div class="module-group">
+                    <div class="module-header">Модуль 5 · Tkinter и чат-боты</div>
+                    <div class="lesson-items">
+                        <div class="lesson-item" data-lesson-id="19"><span class="lesson-icon">🪟</span><span class="lesson-title">19. Основы Tkinter</span></div>
+                        <div class="lesson-item" data-lesson-id="20"><span class="lesson-icon">🧮</span><span class="lesson-title">20. Калькулятор</span></div>
+                        <div class="lesson-item" data-lesson-id="21"><span class="lesson-icon">🤖</span><span class="lesson-title">21. Чат-боты</span></div>
+                        <div class="lesson-item" data-lesson-id="22"><span class="lesson-icon">🌐</span><span class="lesson-title">22. API (погода)</span></div>
+                        <div class="lesson-item" data-lesson-id="23"><span class="lesson-icon">💬</span><span class="lesson-title">23. GUI для бота</span></div>
+                    </div>
+                </div>
+                <!-- Модуль 6: Занятия 24-29 (Нейросети) -->
+                <div class="module-group">
+                    <div class="module-header">Модуль 6 · Нейросети</div>
+                    <div class="lesson-items">
+                        <div class="lesson-item" data-lesson-id="24"><span class="lesson-icon">🧠</span><span class="lesson-title">24. Что такое нейросеть?</span></div>
+                        <div class="lesson-item" data-lesson-id="25"><span class="lesson-icon">📐</span><span class="lesson-title">25. NumPy</span></div>
+                        <div class="lesson-item" data-lesson-id="26"><span class="lesson-icon">⚡</span><span class="lesson-title">26. Перцептрон</span></div>
+                        <div class="lesson-item" data-lesson-id="27"><span class="lesson-icon">🔬</span><span class="lesson-title">27. Scikit-learn</span></div>
+                        <div class="lesson-item" data-lesson-id="28"><span class="lesson-icon">👁️</span><span class="lesson-title">28. Комп. зрение (MNIST)</span></div>
+                        <div class="lesson-item" data-lesson-id="29"><span class="lesson-icon">📝</span><span class="lesson-title">29. Генерация текста</span></div>
+                    </div>
+                </div>
+                <!-- Модуль 7: Занятия 30 (Финал) -->
+                <div class="module-group">
+                    <div class="module-header">Модуль 7 · Финал</div>
+                    <div class="lesson-items">
+                        <div class="lesson-item" data-lesson-id="30"><span class="lesson-icon">🎓</span><span class="lesson-title">30. Защита проектов</span></div>
+                    </div>
                 </div>
             </div>
             <div class="stats">
-                <span>30</span> уроков
+                <span>30</span> уроков на борту
             </div>
         </div>
     </div>
 
     <script>
-        // Данные уроков
-        const lessonsData = {
-            1: {
-                theory: `
-                    <h3>🐍 Урок 1: Введение</h3>
-                    <p>Переменные и функции print/input:</p>
-                    <pre><code>name = input()
-print("Привет, " + name)</code></pre>
-                `,
-                practice: `
-                    <div class="task" data-input="Алиса" data-output="Привет, Алиса!">
-                        <p><strong>Задача: Приветствие</strong></p>
-                        <textarea class="code-input" rows="3">name = input()
-print("Привет, " + name + "!")</textarea>
-                        <div class="input-data-container">
-                            <label>📥 Входные данные:</label>
-                            <textarea class="input-data-field" rows="1">Алиса</textarea>
-                        </div>
-                        <button class="check-btn">Проверить</button>
-                        <button class="show-answer-btn">Показать ответ</button>
-                        <button class="insert-answer-btn">Вставить ответ</button>
-                        <pre class="answer" style="display:none;">name = input()
+        document.addEventListener('DOMContentLoaded', function() {
+            // ---------- ДАННЫЕ ВСЕХ УРОКОВ (ТЕОРИЯ + ПРАКТИКА) ----------
+            const lessonsData = {
+                1: {
+                    theory: `
+                        <h3>🐍 Урок 1: Введение, переменные, print/input</h3>
+                        <p>На этом занятии мы познакомимся с Python, установим среду разработки и напишем первую программу.</p>
+                        
+                        <h4>🔹 Переменные</h4>
+                        <p>Переменная — это именованный контейнер для данных. В Python не нужно указывать тип:</p>
+                        <pre><code>name = "Алиса"
+age = 14
+height = 1.65</code></pre>
+                        
+                        <h4>🔹 Функция print()</h4>
+                        <p>Выводит информацию на экран:</p>
+                        <pre><code>print("Привет, мир!")
+print("Меня зовут", name)</code></pre>
+                        
+                        <h4>🔹 Функция input()</h4>
+                        <p>Запрашивает ввод с клавиатуры, возвращает строку:</p>
+                        <pre><code>city = input("Где ты живёшь? ")
+print("Круто, я тоже живу в", city)</code></pre>
+
+                        <h4>📌 Новые команды этого урока:</h4>
+                        <ul>
+                            <li><code>print( ... )</code> — выводит текст или значения в консоль. Можно перечислять несколько элементов через запятую.</li>
+                            <li><code>input(подсказка)</code> — выводит подсказку и ожидает ввода пользователя. Возвращает введённый текст (всегда строку).</li>
+                            <li><code>переменная = значение</code> — присваивание. Создаёт переменную и сохраняет в неё данные.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="Алиса" data-output="Привет, Алиса!">
+                            <p><strong>Задача 1.1: Приветствие</strong></p>
+                            <p>Напишите программу, которая запрашивает имя пользователя и выводит приветствие в формате: "Привет, [имя]!".</p>
+                            <p><em>Пример ввода:</em> Алиса</p>
+                            <p><em>Пример вывода:</em> Привет, Алиса!</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код здесь..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">name = input()
 print("Привет, " + name + "!")</pre>
-                    </div>
-                `
-            },
-            7: {
-                theory: `
-                    <h3>📊 Урок 7: Строки и списки</h3>
-                    <p>Работа со строками и метод split():</p>
-                    <pre><code>words = input().split()
-print(len(words))</code></pre>
-                `,
-                practice: `
-                    <div class="task" data-input="один два три" data-output="3">
-                        <p><strong>Задача: Количество слов</strong></p>
-                        <textarea class="code-input" rows="3">s = input()
-words = s.split()
-print(len(words))</textarea>
-                        <div class="input-data-container">
-                            <label>📥 Входные данные:</label>
-                            <textarea class="input-data-field" rows="1">один два три</textarea>
                         </div>
-                        <button class="check-btn">Проверить</button>
-                        <button class="show-answer-btn">Показать ответ</button>
-                        <button class="insert-answer-btn">Вставить ответ</button>
-                        <pre class="answer" style="display:none;">s = input()
+                        <hr>
+                        <div class="task" data-input="14" data-output="Через 5 лет тебе будет 19 лет.">
+                            <p><strong>Задача 1.2: Возраст через 5 лет</strong></p>
+                            <p>Запросите возраст пользователя и выведите, сколько лет ему будет через 5 лет.</p>
+                            <p><em>Пример ввода:</em> 14</p>
+                            <p><em>Пример вывода:</em> Через 5 лет тебе будет 19 лет.</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код здесь..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">age = int(input())
+future = age + 5
+print("Через 5 лет тебе будет", future, "лет.")</pre>
+                        </div>
+                    `
+                },
+                2: {
+                    theory: `
+                        <h3>🔀 Урок 2: Ветвления if/elif/else</h3>
+                        <p>Условные операторы позволяют программе реагировать на разные ситуации.</p>
+                        <pre><code>temperature = 25
+if temperature > 20:
+    print("Тепло, идём гулять!")
+else:
+    print("Останемся дома")</code></pre>
+
+                        <h4>📌 Новые команды и операторы:</h4>
+                        <ul>
+                            <li><code>if условие:</code> — если условие истинно, выполняется блок кода под ним.</li>
+                            <li><code>elif условие:</code> — если предыдущие условия ложны, проверяется это условие.</li>
+                            <li><code>else:</code> — выполняется, если ни одно из условий не сработало.</li>
+                            <li><code>==</code> — равно; <code>!=</code> — не равно; <code>&gt;</code> — больше; <code>&lt;</code> — меньше; <code>&gt;=</code> — больше или равно; <code>&lt;=</code> — меньше или равно.</li>
+                            <li><code>and</code>, <code>or</code>, <code>not</code> — логические операторы (и, или, не).</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="7" data-output="Нечётное">
+                            <p><strong>Задача 2.1: Чётное или нечётное?</strong></p>
+                            <p>Программа получает целое число. Выведите "Чётное", если число чётное, и "Нечётное", если нечётное.</p>
+                            <p><em>Пример ввода:</em> 7</p>
+                            <p><em>Пример вывода:</em> Нечётное</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">n = int(input())
+if n % 2 == 0:
+    print("Чётное")
+else:
+    print("Нечётное")</pre>
+                        </div>
+                        <hr>
+                        <div class="task" data-input="82" data-output="Хорошо">
+                            <p><strong>Задача 2.2: Оценка за тест</strong></p>
+                            <p>Вводится число баллов (0–100). Выведите:</p>
+                            <ul>
+                                <li>"Отлично" (≥90)</li>
+                                <li>"Хорошо" (75–89)</li>
+                                <li>"Надо подтянуть" (50–74)</li>
+                                <li>"Плохо" (<50)</li>
+                            </ul>
+                            <p><em>Пример ввода:</em> 82</p>
+                            <p><em>Пример вывода:</em> Хорошо</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">score = int(input())
+if score >= 90:
+    print("Отлично")
+elif score >= 75:
+    print("Хорошо")
+elif score >= 50:
+    print("Надо подтянуть")
+else:
+    print("Плохо")</pre>
+                        </div>
+                    `
+                },
+                3: {
+                    theory: `
+                        <h3>🔄 Урок 3: Циклы while и for</h3>
+                        <p>Циклы позволяют выполнять код многократно.</p>
+                        
+                        <h4>while</h4>
+                        <pre><code>count = 0
+while count < 5:
+    print("Раз:", count)
+    count += 1   # увеличиваем счётчик</code></pre>
+                        
+                        <h4>for</h4>
+                        <pre><code>for i in range(5):
+    print("Квадрат числа", i, "=", i*i)</code></pre>
+
+                        <h4>📌 Новые команды и приёмы:</h4>
+                        <ul>
+                            <li><code>while условие:</code> — повторяет блок кода, пока условие истинно. Важно не забыть изменить переменную, чтобы цикл не стал бесконечным.</li>
+                            <li><code>for переменная in range(количество):</code> — повторяет блок кода заданное число раз, переменная принимает значения от 0 до количество-1.</li>
+                            <li><code>range(начало, конец, шаг)</code> — генерирует последовательность чисел. Например, <code>range(1, 10, 2)</code> даст 1,3,5,7,9.</li>
+                            <li><code>+=</code>, <code>-=</code>, <code>*=</code> — сокращённые операторы присваивания (прибавить, вычесть, умножить).</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="2\n4\n6\n8\n10\n12\n14\n16\n18\n20">
+                            <p><strong>Задача 3.1: Чётные числа</strong></p>
+                            <p>Выведите все чётные числа от 1 до 20 (каждое на новой строке).</p>
+                            <p><em>Пример вывода:</em> 2 4 6 ... 20 (каждое на новой строке)</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">for i in range(2, 21, 2):
+    print(i)</pre>
+                        </div>
+                        <hr>
+                        <div class="task" data-input="5\n3\n8\n0\n" data-output="16">
+                            <p><strong>Задача 3.2: Сумма чисел до нуля</strong></p>
+                            <p>Программа запрашивает числа до тех пор, пока не будет введён 0. После этого выводит сумму всех введённых чисел (не считая ноль).</p>
+                            <p><em>Пример ввода:</em> 5 3 8 0 (каждое с новой строки)</p>
+                            <p><em>Пример вывода:</em> 16</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">total = 0
+while True:
+    n = int(input())
+    if n == 0:
+        break
+    total += n
+print(total)</pre>
+                        </div>
+                    `
+                },
+                4: {
+                    theory: `
+                        <h3>🐢 Урок 4: Введение в Turtle</h3>
+                        <p>Библиотека Turtle позволяет рисовать, управляя черепашкой.</p>
+                        <pre><code>import turtle
+t = turtle.Turtle()
+t.forward(100)
+t.left(90)
+t.forward(50)
+turtle.done()</code></pre>
+
+                        <h4>📌 Новые команды Turtle:</h4>
+                        <ul>
+                            <li><code>import turtle</code> — подключает библиотеку turtle.</li>
+                            <li><code>t = turtle.Turtle()</code> — создаёт черепашку, даёт ей имя (обычно t).</li>
+                            <li><code>t.forward(пиксели)</code> — идёт вперёд на указанное расстояние.</li>
+                            <li><code>t.backward(пиксели)</code> — идёт назад.</li>
+                            <li><code>t.right(градусы)</code> — поворачивает направо на угол.</li>
+                            <li><code>t.left(градусы)</code> — поворачивает налево.</li>
+                            <li><code>t.penup()</code> — поднимает перо (перестаёт рисовать).</li>
+                            <li><code>t.pendown()</code> — опускает перо (начинает рисовать).</li>
+                            <li><code>t.color("red")</code> — меняет цвет пера.</li>
+                            <li><code>turtle.done()</code> — завершает рисование (окно не закрывается).</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Квадрат нарисован">
+                            <p><strong>Задача 4.1: Квадрат</strong></p>
+                            <p>Напишите программу с Turtle, которая рисует квадрат со стороной 150 пикселей красным цветом. Вывод текста не требуется, просто окно с рисунком.</p>
+                            <p><em>Ожидаемый результат:</em> красный квадрат.</p>
+                            <textarea class="code-input" rows="8" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import turtle
+t = turtle.Turtle()
+t.color("red")
+for _ in range(4):
+    t.forward(150)
+    t.left(90)
+turtle.done()</pre>
+                        </div>
+                    `
+                },
+                5: {
+                    theory: `
+                        <h3>🌀 Урок 5: Циклы в Turtle. Узоры</h3>
+                        <p>С помощью циклов можно рисовать сложные узоры, например, спираль или звезду.</p>
+                        <pre><code>for i in range(20):
+    t.forward(i * 10)
+    t.right(90)</code></pre>
+
+                        <h4>📌 Новые приёмы и команды:</h4>
+                        <ul>
+                            <li><code>t.speed(скорость)</code> — устанавливает скорость черепашки (1-10, где 10 — самая быстрая).</li>
+                            <li><code>t.circle(радиус)</code> — рисует круг заданного радиуса.</li>
+                            <li><code>t.dot(диаметр, цвет)</code> — ставит точку.</li>
+                            <li><code>t.begin_fill()</code> и <code>t.end_fill()</code> — закрашивают замкнутую фигуру текущим цветом.</li>
+                            <li>Использование циклов для создания повторяющихся элементов — спиралей, звёзд, снежинок.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Спираль нарисована">
+                            <p><strong>Задача 5.1: Спираль</strong></p>
+                            <p>Нарисуйте спираль, которая увеличивает длину шага на 5 каждый раз. Используйте цикл for.</p>
+                            <p><em>Подсказка:</em> шаг = 5 * i</p>
+                            <textarea class="code-input" rows="8" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import turtle
+t = turtle.Turtle()
+t.speed(10)
+for i in range(1, 21):
+    t.forward(5 * i)
+    t.right(90)
+turtle.done()</pre>
+                        </div>
+                    `
+                },
+                6: {
+                    theory: `
+                        <h3>🏁 Урок 6: Проект — гонки черепашек</h3>
+                        <p>Создадим игру, в которой несколько черепашек движутся случайным образом, и побеждает та, которая первой достигнет финиша.</p>
+                        <pre><code>import turtle, random
+finish = 200
+t1 = turtle.Turtle()
+t2 = turtle.Turtle()
+# ... логика гонки</code></pre>
+
+                        <h4>📌 Новые команды и идеи:</h4>
+                        <ul>
+                            <li><code>random.randint(мин, макс)</code> — генерирует случайное целое число в диапазоне.</li>
+                            <li><code>t.xcor()</code> и <code>t.ycor()</code> — возвращают текущие координаты черепашки.</li>
+                            <li><code>t.setpos(x, y)</code> — перемещает черепашку в заданные координаты.</li>
+                            <li><code>t.write("текст")</code> — выводит текст на экран в месте черепашки.</li>
+                            <li>Создание нескольких черепашек и управление ими в цикле.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Красная черепашка победила!">
+                            <p><strong>Проект: Гонки черепашек</strong></p>
+                            <p>Создайте двух черепашек (красную и синюю). Они должны двигаться вперёд на случайное расстояние (от 1 до 10) до тех пор, пока одна из них не достигнет координаты x = 200. Объявите победителя.</p>
+                            <p><em>Пример вывода:</em> Красная черепашка победила! (или синяя)</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import turtle, random
+finish = 200
+t1 = turtle.Turtle()
+t1.color("red")
+t1.shape("turtle")
+t1.penup()
+t1.goto(-200, 50)
+t1.pendown()
+
+t2 = turtle.Turtle()
+t2.color("blue")
+t2.shape("turtle")
+t2.penup()
+t2.goto(-200, -50)
+t2.pendown()
+
+while True:
+    t1.forward(random.randint(1, 10))
+    t2.forward(random.randint(1, 10))
+    if t1.xcor() >= finish:
+        print("Красная черепашка победила!")
+        break
+    elif t2.xcor() >= finish:
+        print("Синяя черепашка победила!")
+        break
+turtle.done()</pre>
+                        </div>
+                    `
+                },
+                7: {
+                    theory: `
+                        <h3>📊 Урок 7: Строки и списки</h3>
+                        <p>Строки и списки — основные структуры для хранения последовательностей. Строка — это неизменяемая последовательность символов, список — изменяемая последовательность элементов.</p>
+                        
+                        <h4>🔹 Основные операции со строками</h4>
+                        <pre><code>s = "Привет, мир!"
+print(len(s))          # длина
+print(s[0])            # первый символ
+print(s[-1])           # последний
+print(s[2:5])          # срез
+print(s.upper())       # верхний регистр
+print(s.split())       # разделить на слова</code></pre>
+
+                        <h4>🔹 Основные операции со списками</h4>
+                        <pre><code>lst = [1, 2, 3, 4]
+lst.append(5)          # добавить в конец
+lst.insert(0, 0)       # вставить в начало
+lst.pop()              # удалить последний
+lst.remove(2)          # удалить первое вхождение
+print(lst)</code></pre>
+
+                        <h4>📌 Новые команды этого урока:</h4>
+                        <ul>
+                            <li><code>len()</code> — длина строки или списка.</li>
+                            <li><code>str.upper()</code>, <code>str.lower()</code> — изменение регистра.</li>
+                            <li><code>str.split(разделитель)</code> — разбивает строку на список.</li>
+                            <li><code>" ".join(список)</code> — собирает строку из списка.</li>
+                            <li><code>list.append(x)</code> — добавляет элемент в конец списка.</li>
+                            <li><code>list.pop()</code> — удаляет последний элемент.</li>
+                            <li><code>list.insert(i, x)</code> — вставляет элемент на позицию i.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="Python" data-output="nohtyP">
+                            <p><strong>Задача 7.1: Реверс строки</strong></p>
+                            <p>Введите строку и выведите её в обратном порядке.</p>
+                            <p><em>Пример ввода:</em> Python</p>
+                            <p><em>Пример вывода:</em> nohtyP</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код здесь..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">s = input()
+print(s[::-1])</pre>
+                        </div>
+                        <hr>
+                        <div class="task" data-input="один два три" data-output="3">
+                            <p><strong>Задача 7.2: Количество слов</strong></p>
+                            <p>Дана строка, состоящая из слов, разделённых пробелами. Выведите количество слов.</p>
+                            <p><em>Пример ввода:</em> один два три</p>
+                            <p><em>Пример вывода:</em> 3</p>
+                            <textarea class="code-input" rows="5" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">s = input()
 words = s.split()
 print(len(words))</pre>
-                    </div>
-                `
+                        </div>
+                    `
+                },
+                8: {
+                    theory: `
+                        <h3>⚙️ Урок 8: Функции</h3>
+                        <p>Функции помогают избежать повторения кода, структурировать программу и переиспользовать логику.</p>
+                        
+                        <h4>🔹 Определение функции</h4>
+                        <pre><code>def greet(name):
+    """Возвращает приветствие"""
+    return "Привет, " + name
+
+print(greet("Алиса"))</code></pre>
+
+                        <h4>🔹 Параметры и аргументы</h4>
+                        <p>Функция может принимать любое количество параметров. Можно задавать значения по умолчанию.</p>
+                        <pre><code>def power(x, n=2):
+    return x ** n
+
+print(power(3))    # 9 (3²)
+print(power(3, 3)) # 27 (3³)</code></pre>
+
+                        <h4>📌 Новые команды:</h4>
+                        <ul>
+                            <li><code>def имя(параметры):</code> — определение функции.</li>
+                            <li><code>return значение</code> — возврат результата.</li>
+                            <li><code>параметр=значение</code> — параметр по умолчанию.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="5 7" data-output="12">
+                            <p><strong>Задача 8.1: Функция суммы</strong></p>
+                            <p>Напишите функцию <code>sum_two(a, b)</code>, которая возвращает сумму двух чисел. Программа получает два числа через пробел и выводит результат.</p>
+                            <p><em>Пример ввода:</em> 5 7</p>
+                            <p><em>Пример вывода:</em> 12</p>
+                            <textarea class="code-input" rows="8" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">def sum_two(a, b):
+    return a + b
+
+a, b = map(int, input().split())
+print(sum_two(a, b))</pre>
+                        </div>
+                        <hr>
+                        <div class="task" data-input="3 4" data-output="3 9 64">
+                            <p><strong>Задача 8.2: Степени</strong></p>
+                            <p>Напишите функцию <code>power(x, n)</code>, которая возвращает xⁿ. Программа получает два числа: основание и показатель. Выведите через пробел: само число, его квадрат и куб (используйте функцию).</p>
+                            <p><em>Пример ввода:</em> 3 4</p>
+                            <p><em>Пример вывода:</em> 3 9 64</p>
+                            <textarea class="code-input" rows="10" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">def power(x, n):
+    return x ** n
+
+a, b = map(int, input().split())
+print(a, power(a, 2), power(a, b))</pre>
+                        </div>
+                    `
+                },
+                9: {
+                    theory: `
+                        <h3>📚 Урок 9: Словари и кортежи</h3>
+                        <p>Словарь хранит пары ключ-значение, кортеж — неизменяемый список.</p>
+                        
+                        <h4>🔹 Словари</h4>
+                        <pre><code>person = {"name": "Алиса", "age": 14}
+print(person["name"])          # доступ по ключу
+person["city"] = "Москва"      # добавление
+del person["age"]              # удаление
+print(person.keys())           # все ключи
+print(person.values())         # все значения</code></pre>
+
+                        <h4>🔹 Кортежи</h4>
+                        <pre><code>point = (10, 20)
+x, y = point                   # распаковка
+# point[0] = 5                 # ошибка! кортеж неизменяем</code></pre>
+
+                        <h4>📌 Новые команды:</h4>
+                        <ul>
+                            <li><code>{ключ: значение}</code> — создание словаря.</li>
+                            <li><code>dict.keys()</code>, <code>dict.values()</code> — получение ключей и значений.</li>
+                            <li><code>(элемент1, элемент2)</code> — создание кортежа.</li>
+                            <li><code>a, b = кортеж</code> — распаковка.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="Алиса" data-output="123-45-67">
+                            <p><strong>Задача 9.1: Телефонный справочник</strong></p>
+                            <p>Дан словарь: <code>{"Алиса": "123-45-67", "Боб": "987-65-43", "Charlie": "555-12-34"}</code>. Программа запрашивает имя и выводит номер телефона. Если имени нет, вывести "Не найдено".</p>
+                            <p><em>Пример ввода:</em> Алиса</p>
+                            <p><em>Пример вывода:</em> 123-45-67</p>
+                            <textarea class="code-input" rows="8" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">phonebook = {"Алиса": "123-45-67", "Боб": "987-65-43", "Charlie": "555-12-34"}
+name = input()
+print(phonebook.get(name, "Не найдено"))</pre>
+                        </div>
+                        <hr>
+                        <div class="task" data-input="10 20" data-output="x=10, y=20">
+                            <p><strong>Задача 9.2: Распаковка кортежа</strong></p>
+                            <p>Даны два числа через пробел. Создайте кортеж (a, b) и распакуйте его в переменные x и y. Выведите строку вида "x=значение, y=значение".</p>
+                            <p><em>Пример ввода:</em> 10 20</p>
+                            <p><em>Пример вывода:</em> x=10, y=20</p>
+                            <textarea class="code-input" rows="6" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">a, b = map(int, input().split())
+t = (a, b)
+x, y = t
+print(f"x={x}, y={y}")</pre>
+                        </div>
+                    `
+                },
+                10: {
+                    theory: `
+                        <h3>📁 Урок 10: Файлы</h3>
+                        <p>Чтение и запись файлов — важный навык для сохранения данных между запусками программы.</p>
+                        
+                        <h4>🔹 Открытие файла</h4>
+                        <pre><code># Запись в файл
+with open("test.txt", "w") as f:
+    f.write("Привет, файл!")
+
+# Чтение из файла
+with open("test.txt", "r") as f:
+    content = f.read()
+    print(content)</code></pre>
+
+                        <h4>🔹 Режимы работы:</h4>
+                        <ul>
+                            <li><code>"r"</code> — чтение (файл должен существовать).</li>
+                            <li><code>"w"</code> — запись (создаёт новый или перезаписывает).</li>
+                            <li><code>"a"</code> — добавление в конец.</li>
+                        </ul>
+
+                        <h4>📌 Новые команды:</h4>
+                        <ul>
+                            <li><code>open(имя_файла, режим)</code> — открывает файл.</li>
+                            <li><code>with open(...) as f:</code> — гарантирует закрытие файла.</li>
+                            <li><code>f.read()</code> — читает всё содержимое.</li>
+                            <li><code>f.write(строка)</code> — записывает строку.</li>
+                            <li><code>f.readline()</code> — читает одну строку.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="Hello, world!" data-output="Строка записана и прочитана: Hello, world!">
+                            <p><strong>Задача 10.1: Запись и чтение</strong></p>
+                            <p>Программа запрашивает строку, записывает её в файл "output.txt", затем читает этот файл и выводит: "Строка записана и прочитана: " + содержимое.</p>
+                            <p><em>Пример ввода:</em> Hello, world!</p>
+                            <p><em>Пример вывода:</em> Строка записана и прочитана: Hello, world!</p>
+                            <textarea class="code-input" rows="10" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">text = input()
+with open("output.txt", "w") as f:
+    f.write(text)
+with open("output.txt", "r") as f:
+    content = f.read()
+print("Строка записана и прочитана:", content)</pre>
+                        </div>
+                        <hr>
+                        <div class="task" data-input="строка1\nстрока2\nстрока3\n\n" data-output="3">
+                            <p><strong>Задача 10.2: Подсчёт строк в файле</strong></p>
+                            <p>Создайте файл "data.txt" и запишите в него несколько строк (ввод строк до пустой строки). Затем прочитайте файл и выведите количество строк в нём.</p>
+                            <p><em>Пример ввода:</em> строка1, строка2, строка3, пустая строка (каждая с новой строки)</p>
+                            <p><em>Пример вывода:</em> 3</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">with open("data.txt", "w") as f:
+    while True:
+        line = input()
+        if line == "":
+            break
+        f.write(line + "\\n")
+
+with open("data.txt", "r") as f:
+    lines = f.readlines()
+print(len(lines))</pre>
+                        </div>
+                    `
+                },
+                11: {
+                    theory: `
+                        <h3>🎲 Урок 11: Модуль random</h3>
+                        <p>Генерация случайных чисел.</p>
+                        <pre><code>import random
+print(random.randint(1, 10))
+print(random.choice(["камень", "ножницы", "бумага"]))</code></pre>
+                        <h4>📌 Новые команды:</h4>
+                        <ul>
+                            <li><code>random.randint()</code> — случайное целое.</li>
+                            <li><code>random.choice()</code> — случайный элемент.</li>
+                        </ul>
+                    `,
+                    practice: `
+                        <div class="task" data-input="5" data-output="Угадал!">
+                            <p><strong>Задача 11.1: Угадай число</strong></p>
+                            <p>Компьютер загадывает число от 1 до 10. Пользователь вводит число, программа выводит "Угадал!" или "Не угадал!".</p>
+                            <textarea class="code-input" rows="8" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import random
+secret = random.randint(1, 10)
+guess = int(input("Ваше число: "))
+if guess == secret:
+    print("Угадал!")
+else:
+    print("Не угадал! Было", secret)</pre>
+                        </div>
+                    `
+                },
+                12: {
+                    theory: `
+                        <h3>✂️ Урок 12: Консольные игры</h3>
+                        <p>Создаём игру "Камень-ножницы-бумага".</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="камень" data-output="Ничья">
+                            <p><strong>Задача 12.1: Камень-ножницы-бумага</strong></p>
+                            <p>Пользователь вводит "камень", "ножницы" или "бумага". Компьютер выбирает случайно. Определите победителя.</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import random
+options = ["камень", "ножницы", "бумага"]
+computer = random.choice(options)
+user = input("Твой выбор: ")
+if user == computer:
+    print("Ничья")
+elif (user == "камень" and computer == "ножницы") or \
+     (user == "ножницы" and computer == "бумага") or \
+     (user == "бумага" and computer == "камень"):
+    print("Ты победил!")
+else:
+    print("Компьютер победил!")</pre>
+                        </div>
+                    `
+                },
+                13: {
+                    theory: `
+                        <h3>🎮 Урок 13: Основы Pygame</h3>
+                        <p>Создание окна, главный цикл, обработка событий.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Окно создано">
+                            <p><strong>Задача 13.1: Пустое окно</strong></p>
+                            <p>Создайте окно Pygame размером 800x600 с заголовком "Моя игра".</p>
+                            <textarea class="code-input" rows="10" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import pygame
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("Моя игра")
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    pygame.display.flip()
+pygame.quit()</pre>
+                        </div>
+                    `
+                },
+                14: {
+                    theory: `
+                        <h3>🖼️ Урок 14: Графика и спрайты</h3>
+                        <p>Загрузка изображений, создание спрайтов.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Спрайт отображён">
+                            <p><strong>Задача 14.1: Отображение спрайта</strong></p>
+                            <p>Загрузите любое изображение (например, "player.png") и отобразите его на экране в координатах (100,100).</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import pygame
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+player = pygame.image.load("player.png")
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    screen.blit(player, (100, 100))
+    pygame.display.flip()
+pygame.quit()</pre>
+                        </div>
+                    `
+                },
+                15: {
+                    theory: `
+                        <h3>💥 Урок 15: Коллизии</h3>
+                        <p>Обнаружение столкновений спрайтов.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Поймал!">
+                            <p><strong>Задача 15.1: Столкновение с мячом</strong></p>
+                            <p>Создайте красный квадрат (игрок) и синий квадрат (мяч). Если они сталкиваются, выведите "Поймал!".</p>
+                            <textarea class="code-input" rows="15" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import pygame
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+player = pygame.Rect(100, 100, 50, 50)
+ball = pygame.Rect(200, 200, 30, 30)
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    if player.colliderect(ball):
+        print("Поймал!")
+    screen.fill((0,0,0))
+    pygame.draw.rect(screen, (255,0,0), player)
+    pygame.draw.rect(screen, (0,0,255), ball)
+    pygame.display.flip()
+pygame.quit()</pre>
+                        </div>
+                    `
+                },
+                16: {
+                    theory: `
+                        <h3>🔊 Урок 16: Текст и звук</h3>
+                        <p>Вывод текста на экран, воспроизведение звуков.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Hello, Pygame!">
+                            <p><strong>Задача 16.1: Приветствие на экране</strong></p>
+                            <p>Выведите текст "Hello, Pygame!" белым цветом по центру экрана.</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import pygame
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+font = pygame.font.Font(None, 74)
+text = font.render("Hello, Pygame!", True, (255,255,255))
+text_rect = text.get_rect(center=(400,300))
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    screen.blit(text, text_rect)
+    pygame.display.flip()
+pygame.quit()</pre>
+                        </div>
+                    `
+                },
+                17: {
+                    theory: `
+                        <h3>🛠️ Урок 17: Работа над проектом</h3>
+                        <p>Выбор механики: Арканоид, Лабиринт, Платформер.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="">
+                            <p><strong>Этап проекта</strong></p>
+                            <p>Начните создавать свою игру. Определите классы игрока, врагов, фона. Реализуйте движение.</p>
+                        </div>
+                    `
+                },
+                18: {
+                    theory: `
+                        <h3>🏆 Урок 18: Защита проектов</h3>
+                        <p>Презентация готовых игр.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="">
+                            <p><strong>Презентация</strong></p>
+                            <p>Загрузите свою игру в репозиторий и продемонстрируйте однокурсникам.</p>
+                        </div>
+                    `
+                },
+                19: {
+                    theory: `
+                        <h3>🪟 Урок 19: Основы Tkinter</h3>
+                        <p>Создание окон, кнопок, событий.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="Привет!">
+                            <p><strong>Задача 19.1: Кнопка</strong></p>
+                            <p>Создайте окно Tkinter с кнопкой, при нажатии на которую появляется сообщение "Привет!".</p>
+                            <textarea class="code-input" rows="10" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import tkinter as tk
+def say_hello():
+    print("Привет!")
+
+root = tk.Tk()
+btn = tk.Button(root, text="Нажми меня", command=say_hello)
+btn.pack()
+root.mainloop()</pre>
+                        </div>
+                    `
+                },
+                20: {
+                    theory: `
+                        <h3>🧮 Урок 20: Калькулятор</h3>
+                        <p>Создание простого калькулятора на Tkinter.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="5 7" data-output="12">
+                            <p><strong>Задача 20.1: Сложение двух чисел</strong></p>
+                            <p>Сделайте интерфейс с двумя полями ввода и кнопкой, которая выводит сумму.</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import tkinter as tk
+def add():
+    result = float(entry1.get()) + float(entry2.get())
+    label.config(text="Сумма: " + str(result))
+
+root = tk.Tk()
+entry1 = tk.Entry(root)
+entry1.pack()
+entry2 = tk.Entry(root)
+entry2.pack()
+btn = tk.Button(root, text="Сложить", command=add)
+btn.pack()
+label = tk.Label(root, text="Сумма: ")
+label.pack()
+root.mainloop()</pre>
+                        </div>
+                    `
+                },
+                21: {
+                    theory: `
+                        <h3>🤖 Урок 21: Введение в чат-ботов</h3>
+                        <p>Логика вопрос-ответ на словарях.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="привет" data-output="Здравствуй!">
+                            <p><strong>Задача 21.1: Простой бот</strong></p>
+                            <p>Создайте словарь с вопросами и ответами. Пользователь вводит вопрос, бот отвечает (если есть), иначе "Не понимаю".</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">answers = {
+    "привет": "Здравствуй!",
+    "как дела": "Нормально, а у тебя?",
+    "пока": "До свидания!"
+}
+question = input("Твой вопрос: ").lower()
+print(answers.get(question, "Не понимаю"))</pre>
+                        </div>
+                    `
+                },
+                22: {
+                    theory: `
+                        <h3>🌐 Урок 22: Подключение к API</h3>
+                        <p>Использование requests для получения погоды.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="Москва" data-output="+10°C">
+                            <p><strong>Задача 22.1: Погода в вашем городе</strong></p>
+                            <p>Напишите программу, которая через API (например, wttr.in) выводит погоду в заданном городе.</p>
+                            <textarea class="code-input" rows="8" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import requests
+city = input("Город: ")
+url = f"http://wttr.in/{city}?format=%t"
+response = requests.get(url)
+print("Температура:", response.text)</pre>
+                        </div>
+                    `
+                },
+                23: {
+                    theory: `
+                        <h3>💬 Урок 23: GUI для бота на Tkinter</h3>
+                        <p>Упаковываем бота в окно.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="привет" data-output="Здравствуй!">
+                            <p><strong>Задача 23.1: Бот в окошке</strong></p>
+                            <p>Создайте Tkinter-окно с полем ввода, кнопкой и меткой для ответа бота.</p>
+                            <textarea class="code-input" rows="15" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import tkinter as tk
+answers = {"привет": "Здравствуй!", "как дела": "Нормально"}
+def get_answer():
+    q = entry.get().lower()
+    result = answers.get(q, "Не понимаю")
+    label.config(text=result)
+
+root = tk.Tk()
+entry = tk.Entry(root)
+entry.pack()
+btn = tk.Button(root, text="Спросить", command=get_answer)
+btn.pack()
+label = tk.Label(root, text="")
+label.pack()
+root.mainloop()</pre>
+                        </div>
+                    `
+                },
+                24: {
+                    theory: `
+                        <h3>🧠 Урок 24: Что такое нейросеть?</h3>
+                        <p>Понятие обучения. Линейная регрессия.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="y = k*x + b">
+                            <p><strong>Задача 24.1: Предсказание цены</strong></p>
+                            <p>Даны цены на квартиры (размер, цена). Напишите простейшую линейную регрессию (подбор коэффициентов) вручную или с помощью numpy.</p>
+                            <textarea class="code-input" rows="10" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import numpy as np
+X = np.array([30,40,50,60,70])
+y = np.array([3,4,5.5,6,7])
+# метод наименьших квадратов
+A = np.vstack([X, np.ones(len(X))]).T
+k, b = np.linalg.lstsq(A, y, rcond=None)[0]
+print(f"y = {k}*x + {b}")</pre>
+                        </div>
+                    `
+                },
+                25: {
+                    theory: `
+                        <h3>📐 Урок 25: Введение в NumPy</h3>
+                        <p>Работа с массивами.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="[ 0  1  4  9 16 25 36 49 64 81]">
+                            <p><strong>Задача 25.1: Массив</strong></p>
+                            <p>Создайте массив от 0 до 9, затем выведите квадраты каждого элемента.</p>
+                            <textarea class="code-input" rows="6" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import numpy as np
+a = np.arange(10)
+print(a**2)</pre>
+                        </div>
+                    `
+                },
+                26: {
+                    theory: `
+                        <h3>⚡ Урок 26: Создание перцептрона</h3>
+                        <p>Простейший нейрон (логическое И).</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="0 0 1">
+                            <p><strong>Задача 26.1: Перцептрон для И</strong></p>
+                            <p>Реализуйте перцептрон с пороговой функцией для логического И.</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">def perceptron(x1, x2):
+    w1, w2, bias = 1, 1, -1.5
+    s = x1*w1 + x2*w2 + bias
+    return 1 if s > 0 else 0
+
+print(perceptron(0,0))  # 0
+print(perceptron(1,0))  # 0
+print(perceptron(1,1))  # 1</pre>
+                        </div>
+                    `
+                },
+                27: {
+                    theory: `
+                        <h3>🔬 Урок 27: Scikit-learn</h3>
+                        <p>Классификация ирисов.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="0.9">
+                            <p><strong>Задача 27.1: Классификация</strong></p>
+                            <p>Загрузите датасет ирисов, обучите логистическую регрессию и выведите точность.</p>
+                            <textarea class="code-input" rows="10" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+iris = load_iris()
+X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2)
+model = LogisticRegression(max_iter=200)
+model.fit(X_train, y_train)
+print(model.score(X_test, y_test))</pre>
+                        </div>
+                    `
+                },
+                28: {
+                    theory: `
+                        <h3>👁️ Урок 28: Компьютерное зрение (MNIST)</h3>
+                        <p>Распознавание рукописных цифр с помощью Keras.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="0.97">
+                            <p><strong>Задача 28.1: MNIST</strong></p>
+                            <p>Загрузите MNIST, постройте простую нейросеть (один скрытый слой) и оцените точность.</p>
+                            <textarea class="code-input" rows="12" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">import tensorflow as tf
+mnist = tf.keras.datasets.mnist
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+x_train, x_test = x_train/255.0, x_test/255.0
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Flatten(input_shape=(28,28)),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=3)
+print(model.evaluate(x_test, y_test)[1])</pre>
+                        </div>
+                    `
+                },
+                29: {
+                    theory: `
+                        <h3>📝 Урок 29: Генерация текста</h3>
+                        <p>Использование предобученной модели для генерации текста.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="...">
+                            <p><strong>Задача 29.1: Генерация</strong></p>
+                            <p>Загрузите предобученную модель GPT-2 (через transformers) и сгенерируйте продолжение фразы.</p>
+                            <textarea class="code-input" rows="10" placeholder="Ваш код..."></textarea><br>
+                            <button class="check-btn">Проверить</button>
+                            <button class="show-answer-btn">Показать ответ</button>
+                            <button class="insert-answer-btn">Вставить ответ</button>
+                            <pre class="answer" style="display:none;">from transformers import pipeline
+generator = pipeline('text-generation', model='gpt2')
+print(generator("Как выучить Python", max_length=30)[0]['generated_text'])</pre>
+                        </div>
+                    `
+                },
+                30: {
+                    theory: `
+                        <h3>🎓 Урок 30: Защита проектов</h3>
+                        <p>Подготовка презентации, демонстрация лучших проектов.</p>
+                    `,
+                    practice: `
+                        <div class="task" data-input="" data-output="">
+                            <p><strong>Итоговый проект</strong></p>
+                            <p>Выберите одну из тем: игра на Pygame, бот на Tkinter, нейросеть. Доработайте и покажите.</p>
+                        </div>
+                    `
+                }
+            };
+
+            // ---------- ЭЛЕМЕНТЫ ИНТЕРФЕЙСА ----------
+            const tabTheory = document.getElementById('tab-theory');
+            const tabPractice = document.getElementById('tab-practice');
+            const paneTheory = document.getElementById('theory-pane');
+            const panePractice = document.getElementById('practice-pane');
+            const theoryTitle = document.getElementById('theory-lesson-title');
+            const practiceTitle = document.getElementById('practice-lesson-title');
+            const lessonItems = document.querySelectorAll('.lesson-item');
+            const theoryText = document.getElementById('theory-text');
+            const practiceTask = document.getElementById('practice-task');
+
+            // ---------- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ----------
+            function switchTab(active) {
+                tabTheory.classList.remove('active');
+                tabPractice.classList.remove('active');
+                paneTheory.classList.remove('active');
+                panePractice.classList.remove('active');
+                if (active === 'theory') {
+                    tabTheory.classList.add('active');
+                    paneTheory.classList.add('active');
+                } else {
+                    tabPractice.classList.add('active');
+                    panePractice.classList.add('active');
+                }
             }
-        };
 
-        let pyodide = null;
+            tabTheory.addEventListener('click', () => switchTab('theory'));
+            tabPractice.addEventListener('click', () => switchTab('practice'));
 
-        // Загрузка Pyodide
-        async function initPyodide() {
-            if (!pyodide) {
-                pyodide = await loadPyodide({
-                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
-                });
-                console.log('✅ Pyodide загружен');
-            }
-            return pyodide;
-        }
+            // ---------- ФУНКЦИЯ ПРОВЕРКИ (С КОНСОЛЬЮ) ----------
+            function attachPracticeEvents() {
+                document.querySelectorAll('#practice-task .check-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        const taskDiv = this.closest('.task');
+                        const code = taskDiv.querySelector('.code-input').value.trim();
+                        const inputData = taskDiv.dataset.input || '';
+                        const expectedOutput = (taskDiv.dataset.output || '').trim();
 
-        // Запускаем загрузку сразу
-        initPyodide();
+                        // Находим или создаём консоль
+                        let consolePre = taskDiv.querySelector('.console');
+                        if (!consolePre) {
+                            consolePre = document.createElement('pre');
+                            consolePre.className = 'console';
+                            taskDiv.appendChild(consolePre);
+                        }
 
-        // Элементы интерфейса
-        const tabTheory = document.getElementById('tab-theory');
-        const tabPractice = document.getElementById('tab-practice');
-        const paneTheory = document.getElementById('theory-pane');
-        const panePractice = document.getElementById('practice-pane');
-        const theoryTitle = document.getElementById('theory-lesson-title');
-        const practiceTitle = document.getElementById('practice-lesson-title');
-        const theoryText = document.getElementById('theory-text');
-        const practiceTask = document.getElementById('practice-task');
-        const lessonItems = document.querySelectorAll('.lesson-item');
+                        // Если кнопка в состоянии "Скрыть консоль" – просто скрываем и выходим
+                        if (this.textContent === 'Скрыть консоль') {
+                            consolePre.style.display = 'none';
+                            this.textContent = 'Проверить';
+                            return;
+                        }
 
-        // Переключение вкладок
-        function switchTab(active) {
-            tabTheory.classList.remove('active');
-            tabPractice.classList.remove('active');
-            paneTheory.classList.remove('active');
-            panePractice.classList.remove('active');
-            if (active === 'theory') {
-                tabTheory.classList.add('active');
-                paneTheory.classList.add('active');
-            } else {
-                tabPractice.classList.add('active');
-                panePractice.classList.add('active');
-            }
-        }
+                        // Функция выполнения кода через Skulpt
+                        function runCode(input, callback) {
+                            let output = '';
+                            Sk.configure({
+                                output: function(text) { output += text; },
+                                read: function() { throw "Файловая система не поддерживается"; }
+                            });
 
-        tabTheory.addEventListener('click', () => switchTab('theory'));
-        tabPractice.addEventListener('click', () => switchTab('practice'));
-
-        // Функция выполнения Python кода
-        async function executePython(code, inputData) {
-            const py = await initPyodide();
-            
-            // Подготавливаем входные данные
-            const inputLines = inputData ? inputData.split('\n').filter(line => line !== '') : [];
-            
-            // Код для выполнения
-            const pythonCode = `
+                            // Экранируем input для безопасной вставки в тройные кавычки
+                            let escapedInput = input.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+                            let wrappedCode = `
 import sys
-from io import StringIO
-
-# Перехватываем вывод
-old_stdout = sys.stdout
-sys.stdout = StringIO()
-
-# Входные данные
-input_data = ${JSON.stringify(inputLines)}
-input_index = 0
-
-# Своя функция input
-def input(prompt=""):
-    global input_index
-    if input_index < len(input_data):
-        value = input_data[input_index]
-        input_index += 1
-        return value
-    return ""
-
-# Выполняем код
-try:
-${code.split('\n').map(line => '    ' + line).join('\n')}
-except Exception as e:
-    print("Ошибка:", str(e))
-
-# Получаем результат
-result = sys.stdout.getvalue()
-sys.stdout = old_stdout
-result
+import io
+sys.stdin = io.StringIO("""${escapedInput}""")
+${code}
 `;
-            
-            return await py.runPythonAsync(pythonCode);
-        }
-
-        // Функция для обновления кнопок
-        function attachPracticeEvents() {
-            document.querySelectorAll('#practice-task .check-btn').forEach(btn => {
-                btn.addEventListener('click', async function(e) {
-                    const taskDiv = this.closest('.task');
-                    const codeInput = taskDiv.querySelector('.code-input');
-                    const inputField = taskDiv.querySelector('.input-data-field');
-                    const code = codeInput.value;
-                    const inputData = inputField ? inputField.value : '';
-                    const expectedOutput = taskDiv.dataset.output || '';
-                    
-                    // Консоль
-                    let consoleDiv = taskDiv.querySelector('.console');
-                    if (!consoleDiv) {
-                        consoleDiv = document.createElement('div');
-                        consoleDiv.className = 'console';
-                        taskDiv.appendChild(consoleDiv);
-                    }
-                    
-                    // Прячем/показываем консоль
-                    if (this.textContent === 'Скрыть консоль') {
-                        consoleDiv.style.display = 'none';
-                        this.textContent = 'Проверить';
-                        return;
-                    }
-                    
-                    consoleDiv.style.display = 'block';
-                    consoleDiv.innerHTML = '⏳ Выполнение...';
-                    this.textContent = 'Скрыть консоль';
-                    
-                    try {
-                        // Выполняем код
-                        const result = await executePython(code, inputData);
-                        
-                        // Форматируем вывод
-                        let output = '\n';
-                        output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-                        
-                        if (inputData) {
-                            output += '📥 ВХОДНЫЕ ДАННЫЕ:\n';
-                            output += inputData + '\n\n';
+                            Sk.misceval.asyncToPromise(() => {
+                                return Sk.importMainWithBody({
+                                    path: '<stdin>',
+                                    dwarfName: '<stdin>',
+                                    source: wrappedCode
+                                });
+                            }).then(() => {
+                                callback(null, output.trim());
+                            }).catch(err => {
+                                callback(err.toString(), null);
+                            });
                         }
-                        
-                        output += '📤 ВЫВОД ПРОГРАММЫ:\n';
-                        const cleanResult = result ? result.toString().trim() : '(пустой вывод)';
-                        output += cleanResult + '\n';
-                        
-                        if (expectedOutput) {
-                            output += '\n📋 ОЖИДАЕМЫЙ ВЫВОД:\n';
-                            output += expectedOutput + '\n\n';
-                            
-                            if (cleanResult === expectedOutput.trim()) {
-                                output += '✅ РЕЗУЛЬТАТ: Верно!\n';
+
+                        // Запускаем код
+                        runCode(inputData, (err, actualOutput) => {
+                            if (err) {
+                                consolePre.textContent = 'Ошибка выполнения:\n' + err;
                             } else {
-                                output += '❌ РЕЗУЛЬТАТ: Неверно\n';
+                                let resultText = actualOutput || '(пустой вывод)';
+                                if (expectedOutput) {
+                                    if (actualOutput === expectedOutput) {
+                                        resultText += '\n✅ Результат верный!';
+                                    } else {
+                                        resultText += `\n❌ Ожидалось: "${expectedOutput}"`;
+                                    }
+                                }
+                                consolePre.textContent = resultText;
                             }
-                        }
-                        
-                        output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-                        consoleDiv.innerHTML = output.replace(/\n/g, '<br>');
-                        
-                    } catch (error) {
-                        consoleDiv.innerHTML = '❌ ОШИБКА:\n' + error.toString();
-                    }
+                            consolePre.style.display = 'block';
+                            this.textContent = 'Скрыть консоль';
+                        });
+                    });
                 });
-            });
+            }
 
-            // Показать ответ
-            document.querySelectorAll('#practice-task .show-answer-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const taskDiv = this.closest('.task');
-                    const answerPre = taskDiv.querySelector('.answer');
-                    if (answerPre.style.display === 'none') {
-                        answerPre.style.display = 'block';
-                        this.textContent = 'Скрыть ответ';
-                    } else {
-                        answerPre.style.display = 'none';
-                        this.textContent = 'Показать ответ';
-                    }
-                });
-            });
-
-            // Вставить ответ
-            document.querySelectorAll('#practice-task .insert-answer-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const taskDiv = this.closest('.task');
+            // ---------- ВСТАВКА ОТВЕТА ----------
+            document.body.addEventListener('click', function(e) {
+                if (e.target.classList.contains('insert-answer-btn')) {
+                    const taskDiv = e.target.closest('.task');
                     const answerPre = taskDiv.querySelector('.answer');
                     const codeInput = taskDiv.querySelector('.code-input');
                     if (answerPre && codeInput) {
                         codeInput.value = answerPre.textContent.trim();
                     }
+                    e.preventDefault();
+                }
+            });
+
+            // ---------- ПОКАЗ ОТВЕТА ----------
+            document.body.addEventListener('click', function(e) {
+                if (e.target.classList.contains('show-answer-btn')) {
+                    const taskDiv = e.target.closest('.task');
+                    const answerPre = taskDiv.querySelector('.answer');
+                    if (answerPre.style.display === 'none') {
+                        answerPre.style.display = 'block';
+                        e.target.textContent = 'Скрыть ответ';
+                    } else {
+                        answerPre.style.display = 'none';
+                        e.target.textContent = 'Показать ответ';
+                    }
+                    e.preventDefault();
+                }
+            });
+
+            // ---------- АКТИВАЦИЯ УРОКА ----------
+            function setActiveLesson(selected) {
+                lessonItems.forEach(item => item.classList.remove('active'));
+                selected.classList.add('active');
+
+                const lessonId = selected.dataset.lessonId;
+                const lessonTitle = selected.querySelector('.lesson-title').textContent;
+                theoryTitle.textContent = lessonTitle;
+                practiceTitle.textContent = lessonTitle;
+
+                if (lessonsData[lessonId]) {
+                    theoryText.innerHTML = lessonsData[lessonId].theory;
+                    practiceTask.innerHTML = lessonsData[lessonId].practice;
+                    attachPracticeEvents();  // добавляем обработчики для новых кнопок
+                } else {
+                    theoryText.innerHTML = '<p>Материал готовится...</p>';
+                    practiceTask.innerHTML = '<p>Задания появятся позже.</p>';
+                }
+            }
+
+            lessonItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    setActiveLesson(this);
                 });
             });
-        }
 
-        // Активация урока
-        function setActiveLesson(selected) {
-            lessonItems.forEach(item => item.classList.remove('active'));
-            selected.classList.add('active');
-
-            const lessonId = selected.dataset.lessonId;
-            const lessonTitle = selected.querySelector('.lesson-title').textContent;
-            theoryTitle.textContent = lessonTitle;
-            practiceTitle.textContent = lessonTitle;
-
-            if (lessonsData[lessonId]) {
-                theoryText.innerHTML = lessonsData[lessonId].theory;
-                practiceTask.innerHTML = lessonsData[lessonId].practice;
-                attachPracticeEvents();
-            } else {
-                theoryText.innerHTML = '<p>Материал готовится...</p>';
-                practiceTask.innerHTML = '<p>Задания появятся позже.</p>';
-            }
-        }
-
-        // Обработчики кликов на уроки
-        lessonItems.forEach(item => {
-            item.addEventListener('click', function() {
-                setActiveLesson(this);
-            });
+            // Активируем первый урок по умолчанию
+            const firstActive = document.querySelector('.lesson-item.active') || lessonItems[0];
+            if (firstActive) setActiveLesson(firstActive);
         });
-
-        // Активируем первый урок
-        const firstActive = document.querySelector('.lesson-item.active');
-        if (firstActive) setActiveLesson(firstActive);
     </script>
 </body>
 </html>
